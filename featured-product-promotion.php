@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Plugin Name: Featured Product Promotion for WooCommerce
+ * Plugin Name: Featured Product Promotion for WC
  * Description: Adds the ability to feature a product across the site with custom promotional settings.
  * Version: 1.0
- * Author: Vladyslav Parshyn
+ * Author: WpDevm (Vladyslav Parshyn)
  */
 
 // Check if WooCommerce is activated
