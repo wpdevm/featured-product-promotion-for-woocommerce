@@ -50,6 +50,17 @@ class WC_Featured_Product_Promotion
         // Adding an action to highlight featured products in the admin product list
         add_filter('post_class', array($this, 'highlight_featured_product_in_admin_list'), 10, 3);
         add_action('admin_enqueue_scripts', array($this, 'add_custom_style_for_featured_product'));
+        add_action('woocommerce_settings_tabs_array', array($this, 'add_settings_nonce'), 20);
+    }
+
+    public function add_settings_nonce($settings_tabs)
+    {
+        if (isset($_GET['page'], $_GET['tab']) && $_GET['page'] == 'wc-settings' && $_GET['tab'] == 'featured_product_promotion') {
+            add_action('woocommerce_settings_tabs_featured_product_promotion', function () {
+                wp_nonce_field('save_featured_product_promotion_settings', 'featured_product_promotion_settings_nonce');
+            });
+        }
+        return $settings_tabs;
     }
 
     /**
@@ -241,6 +252,15 @@ class WC_Featured_Product_Promotion
      */
     public function save_product_promotion_fields($post_id)
     {
+        // Check nonce and user permissions.
+        if (!isset($_POST['featured_product_promotion_fields_nonce']) || !wp_verify_nonce($_POST['featured_product_promotion_fields_nonce'], 'save_product_promotion_fields_action')) {
+            return;
+        }
+
+        // Check user permissions.
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
         // Check if the promotion checkbox was checked for the current product
         $is_promoted = isset($_POST['_promote_product']) && 'yes' === $_POST['_promote_product'];
 
@@ -300,6 +320,9 @@ class WC_Featured_Product_Promotion
 
     public function save_featured_product_promotion_settings()
     {
+        if (!isset($_POST['featured_product_promotion_settings_nonce']) || !wp_verify_nonce($_POST['featured_product_promotion_settings_nonce'], 'save_featured_product_promotion_settings')) {
+            wp_die('Security check failed');
+        }
         update_option('woocommerce_featured_product_promotion_title_text', wc_clean($_POST['woocommerce_featured_product_promotion_title_text']));
         update_option('woocommerce_featured_product_promotion_bg_color', wc_clean($_POST['woocommerce_featured_product_promotion_bg_color']));
         update_option('woocommerce_featured_product_promotion_text_color', wc_clean($_POST['woocommerce_featured_product_promotion_text_color']));
