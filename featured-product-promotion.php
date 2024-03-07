@@ -3,9 +3,15 @@
 /**
  * Plugin Name: Featured Product Promotion for WC
  * Description: Adds the ability to feature a product across the site with custom promotional settings.
- * Version: 1.0
- * Author: WpDevm (Vladyslav Parshyn)
+ * Version: 1.1
+ * Author: WpDevM (Vladyslav Parshyn)
  */
+
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly.
+}
+
+require_once __DIR__ . '/vendor/autoload.php';
 
 // Check if WooCommerce is activated
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
@@ -27,31 +33,74 @@ function wc_promoted_product_missing_wc_notice()
 }
 
 
-require_once __DIR__ . '/vendor/autoload.php';
-
-if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly.
-}
 
 /**
  * Main class for Featured Product Promotion.
  */
 class WC_Featured_Product_Promotion
 {
+    private $settings;
+
     public function __construct()
     {
-        add_action('admin_init', array($this, 'register_settings'));
-        add_action('woocommerce_product_data_tabs', array($this, 'add_promotion_product_tab'));
-        add_action('woocommerce_product_data_panels', array($this, 'add_promotion_product_fields'));
-        add_action('woocommerce_process_product_meta', array($this, 'save_product_promotion_fields'));
-        add_action('init', array($this, 'display_featured_product'));
-        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts_and_styles'));
-        add_action('woocommerce_update_options_products_featured_product_promotion', array($this, 'save_featured_product_promotion_settings'));
-        // Adding an action to highlight featured products in the admin product list
-        add_filter('post_class', array($this, 'highlight_featured_product_in_admin_list'), 10, 3);
-        add_action('admin_enqueue_scripts', array($this, 'add_custom_style_for_featured_product'));
-        add_action('woocommerce_settings_tabs_array', array($this, 'add_settings_nonce'), 20);
+        $this->settings = include plugin_dir_path(__FILE__) . 'config.php';
+        add_action('init', [$this, 'init']);
+        add_action('admin_init', [$this, 'register_settings']);
+        add_action('woocommerce_product_data_tabs', [$this, 'add_promotion_product_tab']);
+        add_action('woocommerce_product_data_panels', [$this, 'add_promotion_product_fields']);
+        add_action('woocommerce_process_product_meta', [$this, 'save_product_promotion_fields']);
+        add_action('init', [$this, 'display_featured_product']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts_and_styles']);
+        add_action('woocommerce_update_options_products_featured_product_promotion', [$this, 'save_featured_product_promotion_settings']);
+        add_filter('post_class', [$this, 'highlight_featured_product_in_admin_list'], 10, 3);
+        add_action('admin_enqueue_scripts', [$this, 'add_custom_style_for_featured_product']);
+        add_action('woocommerce_settings_tabs_array', [$this, 'add_settings_nonce'], 20);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_and_localize_scripts']);
+        add_action('init', [$this, 'load_textdomain']);
     }
+
+    public function init()
+    {
+        // Ensure WooCommerce is active
+        if (!class_exists('WooCommerce')) {
+            add_action('admin_notices', [$this, 'woocommerce_missing_notice']);
+            return; // Early exit if WooCommerce is not active
+        }
+
+        // Use settings from the configuration file
+        $background_color = $this->settings['promotion_settings']['background_color'];
+        $text_color = $this->settings['promotion_settings']['text_color'];
+        $promotion_title_text = $this->settings['promotion_settings']['promotion_title_text'];
+        $enable_countdown = $this->settings['promotion_settings']['enable_countdown'];
+
+        // Now you can use these settings wherever needed in your plugin.
+        // For example, if you're adding custom styles or scripts:
+        add_action('admin_enqueue_scripts', function () use ($background_color, $text_color) {
+            // This is just an example. Adjust according to your needs.
+            $custom_css = "
+            .highlight-featured-product {
+                background: {$background_color};
+                color: {$text_color};
+            }";
+            wp_add_inline_style('wp-admin', $custom_css);
+        });
+
+        // Plugin modifies front-end display:
+        if (!is_admin()) {
+            add_action('wp_enqueue_scripts', function () use ($background_color, $text_color) {
+                // Enqueue your front-end stylesheet or scripts here
+            });
+        }
+    }
+
+    /**
+     * Admin notice for when WooCommerce is missing.
+     */
+    public function woocommerce_missing_notice()
+    {
+        echo '<div class="notice notice-error"><p>' . __('WooCommerce is required for this plugin to work. Please install and activate WooCommerce.', 'wc-promoted-product') . '</p></div>';
+    }
+
 
     public function add_settings_nonce($settings_tabs)
     {
@@ -70,7 +119,7 @@ class WC_Featured_Product_Promotion
     {
         // Add a new section to WooCommerce Product settings tab.
         add_filter('woocommerce_get_sections_products', function ($sections) {
-            $sections['featured_product_promotion'] = __('Featured Product Promotion', 'woocommerce');
+            $sections['featured_product_promotion'] = __('Featured Product Promotion', 'wc-promoted-product');
             return $sections;
         });
 
@@ -81,43 +130,43 @@ class WC_Featured_Product_Promotion
 
                 // Section title
                 $custom_settings[] = array(
-                    'name' => __('Featured Product Promotion Settings', 'woocommerce'),
+                    'name' => __('Featured Product Promotion Settings', 'wc-promoted-product'),
                     'type' => 'title',
-                    'desc' => __('Settings for the Featured Product Promotion.', 'woocommerce'),
+                    'desc' => __('Settings for the Featured Product Promotion.', 'wc-promoted-product'),
                     'id' => 'featured_product_promotion_settings'
                 );
 
                 // Field for the promotional product title text
                 $custom_settings[] = array(
-                    'name'     => __('Promotion Title Text', 'woocommerce'),
-                    'desc_tip' => __('This will prefix the name of the featured product.', 'woocommerce'),
+                    'name'     => __('Promotion Title Text', 'wc-promoted-product'),
+                    'desc_tip' => __('This will prefix the name of the featured product.', 'wc-promoted-product'),
                     'id'       => 'woocommerce_featured_product_promotion_title_text',
                     'type'     => 'text',
-                    'desc'     => __('Enter the promotion title text.', 'woocommerce'),
+                    'desc'     => __('Enter the promotion title text.', 'wc-promoted-product'),
                 );
 
                 // Background color picker
                 $custom_settings[] = array(
-                    'name'     => __('Background Color', 'woocommerce'),
+                    'name'     => __('Background Color', 'wc-promoted-product'),
                     'id'       => 'woocommerce_featured_product_promotion_bg_color',
                     'type'     => 'color',
-                    'desc'     => __('Choose a background color for the promotion.', 'woocommerce'),
+                    'desc'     => __('Choose a background color for the promotion.', 'wc-promoted-product'),
                 );
 
                 // Text color picker
                 $custom_settings[] = array(
-                    'name'     => __('Text Color', 'woocommerce'),
+                    'name'     => __('Text Color', 'wc-promoted-product'),
                     'id'       => 'woocommerce_featured_product_promotion_text_color',
                     'type'     => 'color',
-                    'desc'     => __('Choose a text color for the promotion.', 'woocommerce'),
+                    'desc'     => __('Choose a text color for the promotion.', 'wc-promoted-product'),
                 );
 
                 $custom_settings[] = array(
-                    'name'     => __('Enable Countdown Timer', 'woocommerce'),
-                    'desc_tip' => __('Display a countdown timer for the featured product promotion.', 'woocommerce'),
+                    'name'     => __('Enable Countdown Timer', 'wc-promoted-product'),
+                    'desc_tip' => __('Enable the countdown timer for a product commercial. Please note that for this you will still need to activate the option in the product editor itself and specify the end time of the promotion', 'wc-promoted-product'),
                     'id'       => 'woocommerce_featured_product_promotion_enable_countdown',
                     'type'     => 'checkbox',
-                    'desc'     => __('Enable to display the countdown timer.', 'woocommerce'),
+                    'desc'     => __('Enable to display the countdown timer.', 'wc-promoted-product'),
                 );
 
                 // End section
@@ -129,6 +178,7 @@ class WC_Featured_Product_Promotion
             return $settings;
         }, 10, 2);
     }
+
 
     // Add a new tab to the product data section in the product edit screen
     public function add_promotion_product_tab($tabs)
@@ -146,58 +196,7 @@ class WC_Featured_Product_Promotion
     public function add_promotion_product_fields()
     {
         global $post;
-
-        echo '<div id="promote_product_options" class="panel woocommerce_options_panel hidden">';
-        echo '<div class="options_group">';
-        // Adding a note above the "Promote this product" checkbox
-        echo '<p style="padding-left: 12px; padding-top: 5px; font-style: italic;">Featured products will be highlighted with a pink background in the general product list for easier identification.</p>';
-
-        $current_featured_product_id = get_option('woocommerce_featured_product_id');
-        $is_currently_featured = $current_featured_product_id == $post->ID;
-
-        // Checkbox to mark the product as "promoted"
-        woocommerce_wp_checkbox([
-            'id' => '_promote_product',
-            'label' => __('Promote this product', 'woocommerce'),
-            'description' => __('Check this box to promote this product as a featured product.', 'woocommerce'),
-            'value' => $is_currently_featured ? 'yes' : 'no',
-            'cbvalue' => 'yes',
-            'checked' => $is_currently_featured ? 'checked' : ''
-        ]);
-
-        // Text field for custom promotion title
-        woocommerce_wp_text_input([
-            'id' => '_promoted_product_title',
-            'label' => __('Promotion Title', 'woocommerce'),
-            'description' => __('Enter a custom title for this promoted product. Leave blank to use product name.', 'woocommerce'),
-            'desc_tip' => 'true',
-            'value' => get_post_meta($post->ID, '_promoted_product_title', true)
-        ]);
-
-        // Checkbox and datetime picker for expiration
-        woocommerce_wp_checkbox([
-            'id' => '_promote_product_expiration_enable',
-            'label' => __('Set expiration', 'woocommerce'),
-            'description' => __('Enable to set an expiration date for this promotion.', 'woocommerce'),
-            'value' => get_post_meta($post->ID, '_promote_product_expiration_enable', true) === 'yes' ? 'yes' : 'no',
-            'cbvalue' => 'yes',
-            'checked' => get_post_meta($post->ID, '_promote_product_expiration_enable', true) === 'yes' ? 'checked' : ''
-        ]);
-
-        // Custom field for expiration date
-        woocommerce_wp_text_input([
-            'id' => '_promoted_product_expiration_date',
-            'label' => __('Expiration Date', 'woocommerce'),
-            'description' => __('Set the expiration date for this promotion.', 'woocommerce'),
-            'type' => 'date',
-            'desc_tip' => 'true',
-            'value' => get_post_meta($post->ID, '_promoted_product_expiration_date', true),
-            'class' => 'promoted-product-expiration-date',
-            'custom_attributes' => ['autocomplete' => 'off']
-        ]);
-
-        echo '</div>'; // End .options_group
-        echo '</div>'; // End #promote_product_options
+        include plugin_dir_path(__FILE__) . 'templates/promotion-product-fields.php';
     }
 
 
@@ -206,45 +205,9 @@ class WC_Featured_Product_Promotion
      */
     public function add_product_promotion_fields()
     {
-        echo '<div class="options_group">';
-
-        // Checkbox to mark the product as "promoted"
-        woocommerce_wp_checkbox(array(
-            'id' => '_promote_product',
-            'label' => __('Promote this product', 'woocommerce'),
-            'description' => __('Check this box to promote this product as a featured product.', 'woocommerce'),
-        ));
-
-        // Text field for custom promotion title
-        woocommerce_wp_text_input(array(
-            'id' => '_promoted_product_title',
-            'label' => __('Promotion Title', 'woocommerce'),
-            'description' => __('Enter a custom title for this promoted product. Leave blank to use product name.', 'woocommerce'),
-            'desc_tip' => true,
-        ));
-
-        // Checkbox and datetime picker for expiration
-        woocommerce_wp_checkbox(array(
-            'id' => '_promote_product_expiration_enable',
-            'label' => __('Set expiration', 'woocommerce'),
-            'description' => __('Enable to set an expiration date for this promotion.', 'woocommerce'),
-        ));
-
-        // Custom field for expiration date (will require custom JavaScript for date picker)
-        woocommerce_wp_text_input(array(
-            'id' => '_promoted_product_expiration_date',
-            'label' => __('Expiration Date', 'woocommerce'),
-            'description' => __('Set the expiration date for this promotion.', 'woocommerce'),
-            'type' => 'date',
-            'desc_tip' => true,
-            'class' => 'promoted-product-expiration-date',
-            'custom_attributes' => array(
-                'autocomplete' => 'off'
-            )
-        ));
-
-        echo '</div>';
+        include plugin_dir_path(__FILE__) . 'templates/product-promotion-fields-wc.php';
     }
+
 
 
     /**
@@ -253,7 +216,7 @@ class WC_Featured_Product_Promotion
     public function save_product_promotion_fields($post_id)
     {
         // Check nonce and user permissions.
-        if (!isset($_POST['featured_product_promotion_fields_nonce']) || !wp_verify_nonce($_POST['featured_product_promotion_fields_nonce'], 'save_product_promotion_fields_action')) {
+        if (!isset($_POST['promoted_product_nonce_field']) || !wp_verify_nonce($_POST['promoted_product_nonce_field'], 'save_promoted_product_action')) {
             return;
         }
 
@@ -320,9 +283,10 @@ class WC_Featured_Product_Promotion
 
     public function save_featured_product_promotion_settings()
     {
-        if (!isset($_POST['featured_product_promotion_settings_nonce']) || !wp_verify_nonce($_POST['featured_product_promotion_settings_nonce'], 'save_featured_product_promotion_settings')) {
-            wp_die('Security check failed');
-        }
+        // if (!isset($_POST['featured_product_promotion_settings_nonce']) || !wp_verify_nonce($_POST['featured_product_promotion_settings_nonce'], 'save_featured_product_promotion_settings')) {
+        //     wp_die('Security check failed');
+        // }
+
         update_option('woocommerce_featured_product_promotion_title_text', wc_clean($_POST['woocommerce_featured_product_promotion_title_text']));
         update_option('woocommerce_featured_product_promotion_bg_color', wc_clean($_POST['woocommerce_featured_product_promotion_bg_color']));
         update_option('woocommerce_featured_product_promotion_text_color', wc_clean($_POST['woocommerce_featured_product_promotion_text_color']));
@@ -376,7 +340,7 @@ class WC_Featured_Product_Promotion
         $text_color = get_option('woocommerce_featured_product_promotion_text_color', '#000000');
 
         // Display the promotion with the specified settings.
-        echo '<div class="flash_sale" style="background-color:' . esc_attr($background_color) . ';color:' . esc_attr($text_color) . ';padding:10px;text-align:center;">';
+        echo '<div class="flash_sale" style="background-color:' . esc_attr($background_color) . ';color:' . esc_attr($text_color) . ';padding:10px;text-align:center;font-family: inherit;">';
         echo '<strong>' . esc_html($promotion_title) . '</strong> <a href="' . esc_url($product_link) . '" style="color:' . esc_attr($text_color) . ';">' . esc_html($product_name) . '</a>';
 
         // Check if countdown timer is enabled in the settings
@@ -384,19 +348,37 @@ class WC_Featured_Product_Promotion
 
         if (!empty($expiration_date) && $countdown_enabled) {
             // Display the countdown timer if the option is enabled
-            echo '<div id="promotion_countdown_timer"></div>'; // Placeholder for the countdown timer
+            echo '<div id="promotion_countdown_timer"></div>';
 
             // Enqueue JavaScript for the countdown timer
             wp_enqueue_script('featured-product-promotion-countdown-js', plugins_url('/assets/js/countdown.js', __FILE__), array('jquery'), null, true);
             wp_localize_script('featured-product-promotion-countdown-js', 'promotionCountdownData', array(
                 'expirationDate' => $expiration_date,
-                'selector' => '#promotion_countdown_timer' // CSS selector for the countdown display
+                'selector' => '#promotion_countdown_timer'
             ));
         }
-
         echo '</div>'; // Close .flash_sale div
     }
 
+
+
+    /**
+     * Enqueues scripts and localizes script strings for translations.
+     */
+    public function enqueue_and_localize_scripts()
+    {
+        // Enqueue JavaScript for the countdown timer
+        wp_enqueue_script('featured-product-promotion-countdown-js', plugins_url('/assets/js/countdown.js', __FILE__), array('jquery'), null, true);
+
+        // Localize script for translations
+        wp_localize_script('featured-product-promotion-countdown-js', 'promotionCountdownStrings', array(
+            'expired' => __('EXPIRED', 'wc-promoted-product'),
+            'days'    => __('days', 'wc-promoted-product'),
+            'hours'   => __('hours', 'wc-promoted-product'),
+            'minutes' => __('minutes', 'wc-promoted-product'),
+            'seconds' => __('seconds', 'wc-promoted-product'),
+        ));
+    }
 
 
     /**
@@ -431,6 +413,11 @@ class WC_Featured_Product_Promotion
                 background: #ffd7d7 !important;
             }";
         wp_add_inline_style('wp-admin', $custom_css);
+    }
+
+    public function load_textdomain()
+    {
+        load_plugin_textdomain('wc-promoted-product', false, basename(dirname(__FILE__)) . '/languages/');
     }
 }
 

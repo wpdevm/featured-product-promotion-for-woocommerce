@@ -1,0 +1,30 @@
+# Copyright (C) 2024 WpDevM (Vladyslav Parshyn)
+# This file is distributed under the same license as the Featured Product Promotion for WC plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Featured Product Promotion for WC 1.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/featured-product-promotion\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2024-03-07T09:35:16+08:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.10.0\n"
+"X-Domain: featured-product-promotion\n"
+
+#. Plugin Name of the plugin
+#: featured-product-promotion.php
+msgid "Featured Product Promotion for WC"
+msgstr ""
+
+#. Description of the plugin
+#: featured-product-promotion.php
+msgid "Adds the ability to feature a product across the site with custom promotional settings."
+msgstr ""
+
+#. Author of the plugin
+#: featured-product-promotion.php
+msgid "WpDevM (Vladyslav Parshyn)"
+msgstr ""
