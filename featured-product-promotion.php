@@ -161,6 +161,7 @@ class WC_Featured_Product_Promotion
                     'desc'     => __('Choose a text color for the promotion.', 'wc-promoted-product'),
                 );
 
+                // Enable Countdown Timer
                 $custom_settings[] = array(
                     'name'     => __('Enable Countdown Timer', 'wc-promoted-product'),
                     'desc_tip' => __('Enable the countdown timer for a product commercial. Please note that for this you will still need to activate the option in the product editor itself and specify the end time of the promotion', 'wc-promoted-product'),
