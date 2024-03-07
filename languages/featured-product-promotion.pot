@@ -1,19 +1,3 @@
-# Copyright (C) 2024 WpDevM (Vladyslav Parshyn)
-# This file is distributed under the same license as the Featured Product Promotion for WC plugin.
-msgid ""
-msgstr ""
-"Project-Id-Version: Featured Product Promotion for WC 1.1\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/featured-product-promotion\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-03-07T09:35:16+08:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.10.0\n"
-"X-Domain: featured-product-promotion\n"
-
 #. Plugin Name of the plugin
 #: featured-product-promotion.php
 msgid "Featured Product Promotion for WC"
@@ -27,4 +11,117 @@ msgstr ""
 #. Author of the plugin
 #: featured-product-promotion.php
 msgid "WpDevM (Vladyslav Parshyn)"
+msgstr ""
+
+#. Additional strings for translation
+#: featured-product-promotion.php
+msgid "Featured products will be highlighted with a pink background in the general product list for easier identification."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Promote this product"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Check this box to promote this product as a featured product."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Promotion Title"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Enter a custom title for this promoted product. Leave blank to use product name."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Set expiration"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Enable to set an expiration date for this promotion."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Expiration Date"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Set the expiration date for this promotion."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Featured Product Promotion"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Featured Product Promotion Settings"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Settings for the Featured Product Promotion."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Promotion Title Text"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "This will prefix the name of the featured product."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Enter the promotion title text."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Background Color"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Choose a background color for the promotion."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Text Color"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Choose a text color for the promotion."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Enable Countdown Timer"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Display a countdown timer for the featured product promotion."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Enable to display the countdown timer."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "Enqueues scripts and localizes script strings for translations."
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "EXPIRED"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "days"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "hours"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "minutes"
+msgstr ""
+
+#: featured-product-promotion.php
+msgid "seconds"
 msgstr ""
