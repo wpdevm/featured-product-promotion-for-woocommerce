@@ -27,7 +27,7 @@ function wc_promoted_product_missing_wc_notice()
 {
 ?>
     <div class="notice notice-error">
-        <p><?php _e('WooCommerce Promoted Product requires WooCommerce to be installed and active. Please install and activate WooCommerce.', 'wc-promoted-product'); ?></p>
+         <p><?php echo 'WooCommerce Promoted Product requires WooCommerce to be installed and active. Please install and activate WooCommerce.'; ?></p>
     </div>
 <?php
 }
