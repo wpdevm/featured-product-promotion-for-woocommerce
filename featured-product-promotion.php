@@ -57,10 +57,11 @@ function wc_promoted_product_missing_wc_notice()
 class WC_Featured_Product_Promotion
 {
     private $settings;
-
+    
     public function __construct()
     {
         $this->settings = include plugin_dir_path(__FILE__) . 'config.php';
+        $this->declare_hpos_compatibility();
         add_action('init', [$this, 'init']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('woocommerce_product_data_tabs', [$this, 'add_promotion_product_tab']);
@@ -78,6 +79,15 @@ class WC_Featured_Product_Promotion
         add_action('init', [$this, 'load_textdomain']);
     }
 
+    public function declare_hpos_compatibility()
+    {
+        add_action('before_woocommerce_init', function () {
+            if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+                \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', plugin_basename(__FILE__), true);
+            }
+        });
+    }
+    
     public function init()
     {
         // Ensure WooCommerce is active
