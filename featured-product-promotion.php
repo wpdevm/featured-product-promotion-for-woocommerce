@@ -20,6 +20,22 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
     return;
 }
 
+
+// Ensure WooCommerce is active before plugin activation
+add_action('admin_init', 'check_woocommerce_is_active');
+function check_woocommerce_is_active()
+{
+    include_once(ABSPATH . 'wp-admin/includes/plugin.php'); // Make sure to include the plugin.php library for the is_plugin_active function
+    if (!is_plugin_active('woocommerce/woocommerce.php')) {
+        deactivate_plugins(plugin_basename(__FILE__));
+        add_action('admin_notices', 'wc_promoted_product_missing_wc_notice');
+        if (isset($_GET['activate'])) {
+            unset($_GET['activate']);
+        }
+    }
+}
+
+
 /**
  * Error notice if WooCommerce is not activated
  */
@@ -27,10 +43,11 @@ function wc_promoted_product_missing_wc_notice()
 {
 ?>
     <div class="notice notice-error">
-         <p><?php echo 'WooCommerce Promoted Product requires WooCommerce to be installed and active. Please install and activate WooCommerce.'; ?></p>
+        <p><?php echo __('WooCommerce Promoted Product requires <a href="https://wordpress.org/plugins/woocommerce/" target="_blank">WooCommerce</a> to be installed and active. Please <a href="' . admin_url('plugin-install.php?s=WooCommerce&tab=search&type=term') . '" target="_blank">install and activate WooCommerce</a>.', 'wc-promoted-product'); ?></p>
     </div>
 <?php
 }
+
 
 
 
@@ -56,6 +73,8 @@ class WC_Featured_Product_Promotion
         add_action('admin_enqueue_scripts', [$this, 'add_custom_style_for_featured_product']);
         add_action('woocommerce_settings_tabs_array', [$this, 'add_settings_nonce'], 20);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_and_localize_scripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_custom_admin_style']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_scripts']);
         add_action('init', [$this, 'load_textdomain']);
     }
 
@@ -72,26 +91,28 @@ class WC_Featured_Product_Promotion
         $text_color = $this->settings['promotion_settings']['text_color'];
         $promotion_title_text = $this->settings['promotion_settings']['promotion_title_text'];
         $enable_countdown = $this->settings['promotion_settings']['enable_countdown'];
-
-        // Now you can use these settings wherever needed in your plugin.
-        // For example, if you're adding custom styles or scripts:
-        add_action('admin_enqueue_scripts', function () use ($background_color, $text_color) {
-            // This is just an example. Adjust according to your needs.
-            $custom_css = "
-            .highlight-featured-product {
-                background: {$background_color};
-                color: {$text_color};
-            }";
-            wp_add_inline_style('wp-admin', $custom_css);
-        });
-
-        // Plugin modifies front-end display:
-        if (!is_admin()) {
-            add_action('wp_enqueue_scripts', function () use ($background_color, $text_color) {
-                // Enqueue your front-end stylesheet or scripts here
-            });
-        }
     }
+
+    public function enqueue_custom_admin_style()
+    {
+        $background_color = $this->settings['promotion_settings']['background_color'];
+        $text_color = $this->settings['promotion_settings']['text_color'];
+
+        $custom_css = "
+        .highlight-featured-product {
+            background: {$background_color};
+            color: {$text_color};
+        }";
+        wp_add_inline_style('wp-admin', $custom_css);
+    }
+
+
+    public function enqueue_frontend_scripts()
+    {
+        $background_color = $this->settings['promotion_settings']['background_color'];
+        $text_color = $this->settings['promotion_settings']['text_color'];
+    }
+
 
     /**
      * Admin notice for when WooCommerce is missing.
@@ -161,7 +182,6 @@ class WC_Featured_Product_Promotion
                     'desc'     => __('Choose a text color for the promotion.', 'wc-promoted-product'),
                 );
 
-                // Enable Countdown Timer
                 $custom_settings[] = array(
                     'name'     => __('Enable Countdown Timer', 'wc-promoted-product'),
                     'desc_tip' => __('Enable the countdown timer for a product commercial. Please note that for this you will still need to activate the option in the product editor itself and specify the end time of the promotion', 'wc-promoted-product'),
