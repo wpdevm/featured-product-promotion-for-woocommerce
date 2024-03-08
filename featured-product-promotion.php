@@ -16,8 +16,6 @@
  * WC tested up to: 8.6.1
  */
 
-<?php
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
